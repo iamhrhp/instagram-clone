@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions, Modal } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Camera, ArrowLeft } from 'iconsax-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ const ProfileScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const user = route.params?.user || { name: 'Henry Coutry', id: 1 };
+  const videoItem = route.params?.videoItem;
   const insets = useSafeAreaInsets();
   
   const [activeTab, setActiveTab] = useState('Photos');
@@ -18,6 +19,17 @@ const ProfileScreen = () => {
 
   // Format username fallback
   const username = `@${user.name.toLowerCase().replace(/\s+/g, '_')}`;
+
+  // Dynamic Data Extraction from Pexels API
+  const bannerUri = videoItem?.image || 'https://images.pexels.com/photos/2559941/pexels-photo-2559941.jpeg?auto=compress&cs=tinysrgb&w=800';
+  const pic1 = videoItem?.video_pictures?.[0]?.picture || 'https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg?auto=compress&cs=tinysrgb&w=400';
+  const pic2 = videoItem?.video_pictures?.[2]?.picture || 'https://images.pexels.com/photos/1382731/pexels-photo-1382731.jpeg?auto=compress&cs=tinysrgb&w=400';
+  const pic3 = videoItem?.video_pictures?.[4]?.picture || 'https://images.pexels.com/photos/1126993/pexels-photo-1126993.jpeg?auto=compress&cs=tinysrgb&w=400';
+
+  // Generate deterministic pseudo-stats based on the user's ID from Pexels API
+  const postCount = (user.id % 400) + 12;
+  const followersCount = ((user.id % 90) + 10) + ((user.id % 9) * 0.1); 
+  const followingCount = (user.id % 500) + 100;
 
   const handleMessage = () => {
     navigation.navigate('Message', { user });
@@ -29,7 +41,7 @@ const ProfileScreen = () => {
         {/* Banner */}
         <View style={styles.bannerContainer}>
           <Image 
-            source={{ uri: 'https://images.pexels.com/photos/2559941/pexels-photo-2559941.jpeg?auto=compress&cs=tinysrgb&w=800' }} 
+            source={{ uri: bannerUri }} 
             style={styles.bannerImage} 
           />
           {/* Back button overlay */}
@@ -60,17 +72,17 @@ const ProfileScreen = () => {
           {/* Stats */}
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>240</Text>
+              <Text style={styles.statValue}>{postCount}</Text>
               <Text style={styles.statLabel}>Post</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>47.36K</Text>
+              <Text style={styles.statValue}>{followersCount.toFixed(1)}K</Text>
               <Text style={styles.statLabel}>followers</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>32K</Text>
+              <Text style={styles.statValue}>{followingCount}</Text>
               <Text style={styles.statLabel}>following</Text>
             </View>
           </View>
@@ -108,11 +120,11 @@ const ProfileScreen = () => {
         {/* Masonry Grid */}
         <View style={styles.gridContainer}>
            <View style={styles.gridLeft}>
-              <Image source={{ uri: 'https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg?auto=compress&cs=tinysrgb&w=400' }} style={styles.largeImage} />
+              <Image source={{ uri: pic1 }} style={styles.largeImage} />
            </View>
            <View style={styles.gridRight}>
-              <Image source={{ uri: 'https://images.pexels.com/photos/1382731/pexels-photo-1382731.jpeg?auto=compress&cs=tinysrgb&w=400' }} style={styles.smallImageTop} />
-              <Image source={{ uri: 'https://images.pexels.com/photos/1126993/pexels-photo-1126993.jpeg?auto=compress&cs=tinysrgb&w=400' }} style={styles.smallImageBottom} />
+              <Image source={{ uri: pic2 }} style={styles.smallImageTop} />
+              <Image source={{ uri: pic3 }} style={styles.smallImageBottom} />
            </View>
         </View>
       </ScrollView>

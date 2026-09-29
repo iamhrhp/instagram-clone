@@ -28,13 +28,13 @@ const MessageScreen = () => {
           <ArrowLeft size={24} color="#FFF" />
         </TouchableOpacity>
         
-        <View style={styles.headerTitleContainer}>
+        <TouchableOpacity style={styles.headerTitleContainer} onPress={() => navigation.goBack()}>
           <Image source={{ uri: `https://i.pravatar.cc/150?u=${user.id}` }} style={styles.headerAvatar} />
           <View>
             <Text style={styles.headerName}>{user.name}</Text>
             <Text style={styles.headerUsername}>@{user.name.toLowerCase().replace(/\s+/g, '_')}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.iconBtn}><Call size={24} color="#FFF" /></TouchableOpacity>

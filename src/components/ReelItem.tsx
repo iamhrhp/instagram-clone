@@ -39,7 +39,7 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive }) => {
   const handlePress = () => setIsPaused(!isPaused);
 
   const navigateToProfile = () => {
-    navigation.navigate('Profile', { user: item.user });
+    navigation.navigate('Profile', { user: item.user, videoItem: item });
   };
 
   const toggleLike = () => {
