@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ArrowLeft, Check } from 'iconsax-react-native';
 import { useProfileData, UserProfileData } from '../hooks/useProfileData';
@@ -19,10 +19,12 @@ const EditProfileScreen = () => {
   }, [profileData]);
 
   const handleSave = async () => {
+    if (!formData.name.trim() || !formData.username.trim()) {
+      Alert.alert('Validation Error', 'Name and Username cannot be empty.');
+      return;
+    }
+    
     await saveProfileData(formData);
-    // Let ProfileScreen reload if we just go back, it will re-mount or we can use event listeners, 
-    // but the simplest way is to pass the param back or just let the hook fetch again.
-    // The hook in ProfileScreen will fetch on mount. To force update, we can pass a timestamp.
     navigation.navigate('Main', {
       screen: 'ProfileTab',
       params: { timestamp: Date.now() },
@@ -38,7 +40,7 @@ const EditProfileScreen = () => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Edit Profile</Text>
           <TouchableOpacity onPress={handleSave} style={styles.headerBtn}>
-            <Check size={28} color="#3498db" variant="Bold" />
+            <Text style={styles.saveBtnText}>Save</Text>
           </TouchableOpacity>
         </View>
 
@@ -143,6 +145,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#000',
+  },
+  saveBtnText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#3498db',
   },
   container: {
     flex: 1,

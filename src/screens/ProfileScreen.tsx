@@ -121,15 +121,15 @@ const ProfileScreen = () => {
 
           <View style={styles.statsSection}>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>358</Text>
+              <Text style={styles.statValue}>{photos.length}</Text>
               <Text style={styles.statLabel}>Posts</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>153,7K</Text>
+              <Text style={styles.statValue}>{((creator.id % 500) + 100)}</Text>
               <Text style={styles.statLabel}>Following</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>268</Text>
+              <Text style={styles.statValue}>{((creator.id % 50000) + 1000)}</Text>
               <Text style={styles.statLabel}>Followers</Text>
             </View>
           </View>

@@ -17,7 +17,8 @@ pexelsApi.interceptors.response.use(
       console.warn('Pexels API Rate Limit Exceeded. Using fallback data.');
       
       const isVideo = error.config.url.includes('/videos');
-      
+      const MOCK_NAMES = ['alex_travels', 'sarah.j', 'photo_guru', 'mike_captures', 'emma_wanderlust', 'josh_daily', 'david_lens', 'lily_focus'];
+
       if (isVideo) {
         return Promise.resolve({
           data: {
@@ -32,7 +33,7 @@ pexelsApi.interceptors.response.use(
               duration: 15,
               url: 'https://www.pexels.com/',
               image: `https://picsum.photos/seed/video${i}/1080/1920`,
-              user: { id: 1, name: 'Demo User', url: '' },
+              user: { id: i + 1, name: MOCK_NAMES[i % MOCK_NAMES.length], url: '' },
               video_files: [
                 { id: 1, quality: 'hd', file_type: 'video/mp4', width: 1080, height: 1920, fps: 30, link: 'https://www.w3schools.com/html/mov_bbb.mp4' }
               ],
@@ -53,9 +54,9 @@ pexelsApi.interceptors.response.use(
             width: 1080,
             height: 1080,
             url: '',
-            photographer: 'Demo User',
+            photographer: MOCK_NAMES[(i + 3) % MOCK_NAMES.length],
             photographer_url: '',
-            photographer_id: 1,
+            photographer_id: i + 10,
             avg_color: '#000',
             src: {
               original: `https://picsum.photos/seed/photo${i}/1080/1080`,

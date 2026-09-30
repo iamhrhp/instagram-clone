@@ -9,16 +9,22 @@ export interface UserProfileData {
   bio: string;
   website: string;
   direction: string;
+  posts: string;
+  followers: string;
+  following: string;
 }
 
 const DEFAULT_PROFILE: UserProfileData = {
   name: 'Henry Coutry',
   username: 'henry',
-  location: 'Location',
-  activities: 'Activities',
-  bio: 'Your bio here',
-  website: 'www.yoursite.com',
-  direction: 'Direction, participant group',
+  location: '',
+  activities: '',
+  bio: '',
+  website: '',
+  direction: '',
+  posts: '0',
+  followers: '0',
+  following: '0',
 };
 
 const PROFILE_STORAGE_KEY = '@user_profile_data';

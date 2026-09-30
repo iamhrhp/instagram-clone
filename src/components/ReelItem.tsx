@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback, Touchable
 import { useNavigation } from '@react-navigation/native';
 import Video from 'react-native-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heart, MessageText, Send2, Pause, Music, More, ArrowLeft, Refresh2 } from 'iconsax-react-native';
+import { Heart, Message, Send2, Pause, Music, More, ArrowLeft, Repeat, MusicSquare } from 'iconsax-react-native';
 import { PexelsVideo } from '../types';
 
 const { width, height } = Dimensions.get('window');
@@ -89,7 +89,7 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
           </View>
         )}
 
-        <View style={{ width, height, position: 'absolute', top: 0, left: 0, justifyContent: 'flex-end', paddingBottom: Math.max(insets.bottom, 20), paddingHorizontal: 15 }}>
+        <View style={{ width, height, position: 'absolute', top: 0, left: 0, justifyContent: 'flex-end', paddingBottom: 80 + Math.max(insets.bottom, 20), paddingHorizontal: 15 }}>
           {isPaused && (
             <View style={styles.pauseIconContainer}>
               <View style={styles.pauseIconBg}>
@@ -98,8 +98,8 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
             </View>
           )}
           
-          <View style={[styles.bottomSection, isDescExpanded && { paddingRight: 15, zIndex: 30 }]}>
-            <View style={styles.userInfo}>
+          <View style={[styles.bottomSection, isDescExpanded && { zIndex: 30 }]}>
+            <View style={styles.userInfoRow}>
               <TouchableOpacity onPress={navigateToProfile}>
                 <View style={styles.avatarRing}>
                   <Image 
@@ -108,39 +108,40 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
                   />
                 </View>
               </TouchableOpacity>
-              <TouchableOpacity onPress={navigateToProfile}>
-                <Text style={styles.username}>{item.user.name.toLowerCase().replace(' ', '_') || 'username'}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.followButton, isFollowing && styles.followingButton]} 
-                onPress={() => setIsFollowing(!isFollowing)}
-              >
-                <Text style={styles.followButtonText}>{isFollowing ? 'Following' : 'Follow'}</Text>
-              </TouchableOpacity>
+              
+              <View style={styles.userTextCol}>
+                <View style={styles.usernameRow}>
+                  <TouchableOpacity onPress={navigateToProfile}>
+                    <Text style={styles.username}>{item.user.name.toLowerCase().replace(' ', '_') || 'username'}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.followButton, isFollowing && styles.followingButton]} 
+                    onPress={() => setIsFollowing(!isFollowing)}
+                  >
+                    <Text style={styles.followButtonText}>{isFollowing ? 'Following' : 'Follow'}</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                <View style={styles.musicRow}>
+                  <Music size="12" color="#FFFFFF" variant="Bold" />
+                  <Text style={styles.musicText}>Lorem ipsum • Original</Text>
+                </View>
+              </View>
             </View>
-            <TouchableOpacity onPress={() => setIsDescExpanded(!isDescExpanded)} activeOpacity={0.8}>
+
+            <TouchableOpacity onPress={() => setIsDescExpanded(!isDescExpanded)} activeOpacity={0.8} style={styles.descriptionContainer}>
               {isDescExpanded ? (
                 <ScrollView style={{ maxHeight: 150 }} showsVerticalScrollIndicator={false}>
-                  <View style={styles.musicRow}>
-                    <Music size="12" color="#FFFFFF" variant="Bold" />
-                    <Text style={styles.musicText}>Lorem ipsum • Original</Text>
-                  </View>
                   <Text style={styles.description}>{fullText}</Text>
                   <Text style={styles.hashtags}>#Lorem #ipsum #dolor</Text>
                 </ScrollView>
               ) : (
-                <View>
-                  <View style={styles.musicRow}>
-                    <Music size="12" color="#FFFFFF" variant="Bold" />
-                    <Text style={styles.musicText}>Lorem ipsum • Original</Text>
-                  </View>
-                  <Text style={styles.hashtags}>#Lorem #ipsum #dolor</Text>
-                </View>
+                <Text style={styles.hashtags}>#Lorem #ipsum #dolor</Text>
               )}
             </TouchableOpacity>
           </View>
           
-          <View style={[styles.rightSection, { bottom: Math.max(insets.bottom, 20) + 20 }]}>
+          <View style={[styles.rightSection, { bottom: 80 + Math.max(insets.bottom, 20) + 10 }]}>
             <TouchableOpacity style={styles.actionButton} onPress={toggleLike}>
               <View style={styles.iconWrapper}>
                 <Heart size="30" color={isLiked ? "#FF3040" : "#FFFFFF"} variant={isLiked ? "Bold" : "Linear"} />
@@ -149,13 +150,13 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton} onPress={() => setShowComments(true)}>
               <View style={styles.iconWrapper}>
-                <MessageText size="28" color="#FFFFFF" variant="Linear" />
+                <Message size="28" color="#FFFFFF" variant="Linear" />
               </View>
               <Text style={styles.actionText}>{formatCount(commentsCount)}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton}>
               <View style={styles.iconWrapper}>
-                <Refresh2 size="28" color="#FFFFFF" variant="Linear" />
+                <Repeat size="28" color="#FFFFFF" variant="Linear" />
               </View>
               <Text style={styles.actionText}>735</Text>
             </TouchableOpacity>
@@ -170,9 +171,11 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
                 <More size="24" color="#FFFFFF" variant="Linear" style={{ transform: [{ rotate: '90deg' }] }} />
               </View>
             </TouchableOpacity>
-            <View style={styles.musicRecord}>
-              <Image source={{ uri: `https://i.pravatar.cc/150?u=${item.user.id}` }} style={styles.musicRecordImage} />
-            </View>
+            <TouchableOpacity style={styles.actionButton}>
+              <View style={styles.iconWrapper}>
+                <MusicSquare size="32" color="#FFFFFF" variant="Linear" />
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -309,17 +312,28 @@ const styles = StyleSheet.create({
     paddingRight: 70, // Space for right actions
     marginBottom: 0,
   },
-  userInfo: {
+  userInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
+  },
+  userTextCol: {
+    justifyContent: 'center',
+  },
+  usernameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  descriptionContainer: {
+    marginTop: 2,
   },
   avatarRing: {
     width: 38,
     height: 38,
     borderRadius: 19,
     borderWidth: 2,
-    borderColor: '#E79C2A',
+    borderColor: '#E79C2A', // matching screenshot gradient
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -376,7 +390,6 @@ const styles = StyleSheet.create({
   musicRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
   },
   musicText: {
     color: 'white',
@@ -410,17 +423,6 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,
-  },
-  musicRecord: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#333',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFF',
-    marginTop: 5,
   },
   musicRecordImage: {
     width: 18,

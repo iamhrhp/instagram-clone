@@ -3,7 +3,7 @@ import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home2, SearchNormal, VideoPlay, Send2, ProfileCircle } from 'iconsax-react-native';
+import { Home, SearchNormal1, VideoPlay, Send2, ProfileCircle } from 'iconsax-react-native';
 
 import ReelsScreen from '../screens/ReelsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -32,10 +32,10 @@ const MainTabs = () => {
         tabBarIcon: ({ color, focused }) => {
           const variant = focused ? 'Bold' : 'Linear';
           switch (route.name) {
-            case 'Home': return <Home2 size={26} color={color} variant={variant} />;
+            case 'Home': return <Home size={26} color={color} variant={variant} />;
             case 'Video': return <VideoPlay size={26} color={color} variant={variant} />;
             case 'Send': return <Send2 size={26} color={color} variant={variant} />;
-            case 'Search': return <SearchNormal size={26} color={color} variant={variant} />;
+            case 'Search': return <SearchNormal1 size={26} color={color} variant={variant} />;
             case 'ProfileTab': return <ProfileCircle size={26} color={color} variant={variant} />;
             default: return null;
           }

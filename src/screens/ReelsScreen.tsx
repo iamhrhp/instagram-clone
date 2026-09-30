@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, FlatList, Dimensions, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Camera } from 'iconsax-react-native';
 import { getPopularVideos } from '../api/pexels';
 import { PexelsVideo } from '../types';
 import ReelItem from '../components/ReelItem';
@@ -80,7 +81,8 @@ const ReelsScreen: React.FC = () => {
       
       {/* Top Header Overlay */}
       <View style={[styles.headerOverlay, { paddingTop: Math.max(insets.top, 15) }]}>
-        <View style={styles.headerLeft}>
+        <View style={styles.headerSpacer} />
+        <View style={styles.headerCenter}>
           <Text style={styles.headerTitleActive}>Reels</Text>
           <Text style={styles.headerTitleInactive}>Friends</Text>
           <View style={styles.friendsCircles}>
@@ -88,6 +90,11 @@ const ReelsScreen: React.FC = () => {
             <View style={[styles.friendCircle, { backgroundColor: '#4ECDC4', marginLeft: -8 }]} />
             <View style={[styles.friendCircle, { backgroundColor: '#C7F464', marginLeft: -8 }]} />
           </View>
+        </View>
+        <View style={styles.headerRight}>
+          <TouchableOpacity>
+            <Camera size={28} color="#FFFFFF" variant="Linear" style={styles.cameraIcon} />
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -115,13 +122,31 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 15,
     zIndex: 10,
   },
-  headerLeft: {
+  headerSpacer: {
+    flex: 1,
+  },
+  headerCenter: {
+    flex: 2,
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     gap: 15,
+  },
+  headerRight: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  cameraIcon: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 3,
   },
   headerTitleActive: {
     color: 'white',

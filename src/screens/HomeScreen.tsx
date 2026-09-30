@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Dimensions, ActivityIndicator, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Add, Heart, MessageText, Send2, More, Bookmark, Verify, Refresh2 } from 'iconsax-react-native';
 import { pexelsApi } from '../api/pexels';
@@ -7,12 +7,14 @@ import { NormalizedPhoto } from '../types';
 
 const { width } = Dimensions.get('window');
 
+const DUMMY_NAMES = ['alex_travels', 'sarah.j', 'photo_guru', 'mike_captures', 'emma_wanderlust', 'josh_daily'];
+
 const dummyStories = [
   { id: '1', name: 'Your story', image: 'https://i.pravatar.cc/150?u=1', isMine: true },
-  { id: '2', name: 'name', image: 'https://i.pravatar.cc/150?u=2' },
-  { id: '3', name: 'name', image: 'https://i.pravatar.cc/150?u=3' },
-  { id: '4', name: 'name', image: 'https://i.pravatar.cc/150?u=4' },
-  { id: '5', name: 'name', image: 'https://i.pravatar.cc/150?u=5' },
+  { id: '2', name: DUMMY_NAMES[0], image: 'https://i.pravatar.cc/150?u=2' },
+  { id: '3', name: DUMMY_NAMES[1], image: 'https://i.pravatar.cc/150?u=3' },
+  { id: '4', name: DUMMY_NAMES[2], image: 'https://i.pravatar.cc/150?u=4' },
+  { id: '5', name: DUMMY_NAMES[3], image: 'https://i.pravatar.cc/150?u=5' },
 ];
 
 const HomeScreen = () => {
@@ -117,7 +119,7 @@ const HomeScreen = () => {
     <View style={[styles.container, { paddingTop: Math.max(insets.top, 10) }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.logoText}>Instagram</Text>
+        <Text style={styles.logoText}>ReelsTalk</Text>
         <View style={styles.headerRight}>
           <TouchableOpacity style={styles.headerIconBtn}>
             <Add size={28} color="#000" />
@@ -155,7 +157,12 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 15, paddingBottom: 10, paddingTop: 5 },
-  logoText: { color: '#000', fontSize: 26, fontWeight: '700', fontStyle: 'italic', fontFamily: 'Georgia' }, // Using Georgia to fake a serif/cursive look temporarily
+  logoText: { 
+    color: '#000', 
+    fontSize: 28, 
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
   headerRight: { flexDirection: 'row', alignItems: 'center' },
   headerIconBtn: { marginLeft: 20, position: 'relative' },
   notificationDot: { position: 'absolute', top: 0, right: 0, width: 10, height: 10, borderRadius: 5, backgroundColor: '#FF3B30', borderWidth: 2, borderColor: '#FFF' },
