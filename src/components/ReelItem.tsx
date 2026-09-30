@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback, Touchable
 import { useNavigation } from '@react-navigation/native';
 import Video from 'react-native-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heart, MessageText, Send2, Pause, Music, More, ArrowLeft } from 'iconsax-react-native';
+import { Heart, MessageText, Send2, Pause, Music, More, ArrowLeft, Refresh2 } from 'iconsax-react-native';
 import { PexelsVideo } from '../types';
 
 const { width, height } = Dimensions.get('window');
@@ -101,13 +101,15 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
           <View style={[styles.bottomSection, isDescExpanded && { paddingRight: 15, zIndex: 30 }]}>
             <View style={styles.userInfo}>
               <TouchableOpacity onPress={navigateToProfile}>
-                <Image 
-                  source={{ uri: `https://i.pravatar.cc/150?u=${item.user.id}` }} 
-                  style={styles.avatarImage} 
-                />
+                <View style={styles.avatarRing}>
+                  <Image 
+                    source={{ uri: `https://i.pravatar.cc/150?u=${item.user.id}` }} 
+                    style={styles.avatarImage} 
+                  />
+                </View>
               </TouchableOpacity>
               <TouchableOpacity onPress={navigateToProfile}>
-                <Text style={styles.username}>{item.user.name || 'User'}</Text>
+                <Text style={styles.username}>{item.user.name.toLowerCase().replace(' ', '_') || 'username'}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.followButton, isFollowing && styles.followingButton]} 
@@ -119,44 +121,58 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
             <TouchableOpacity onPress={() => setIsDescExpanded(!isDescExpanded)} activeOpacity={0.8}>
               {isDescExpanded ? (
                 <ScrollView style={{ maxHeight: 150 }} showsVerticalScrollIndicator={false}>
+                  <View style={styles.musicRow}>
+                    <Music size="12" color="#FFFFFF" variant="Bold" />
+                    <Text style={styles.musicText}>Lorem ipsum • Original</Text>
+                  </View>
                   <Text style={styles.description}>{fullText}</Text>
+                  <Text style={styles.hashtags}>#Lorem #ipsum #dolor</Text>
                 </ScrollView>
               ) : (
-                <Text style={styles.description} numberOfLines={2}>
-                  {fullText}
-                </Text>
+                <View>
+                  <View style={styles.musicRow}>
+                    <Music size="12" color="#FFFFFF" variant="Bold" />
+                    <Text style={styles.musicText}>Lorem ipsum • Original</Text>
+                  </View>
+                  <Text style={styles.hashtags}>#Lorem #ipsum #dolor</Text>
+                </View>
               )}
             </TouchableOpacity>
-            <View style={styles.musicRow}>
-              <Music size="14" color="#FFFFFF" variant="Bold" />
-              <Text style={styles.musicText}>Original Audio - {item.user.name || 'User'}</Text>
-            </View>
           </View>
           
           <View style={[styles.rightSection, { bottom: Math.max(insets.bottom, 20) + 20 }]}>
             <TouchableOpacity style={styles.actionButton} onPress={toggleLike}>
               <View style={styles.iconWrapper}>
-                <Heart size="34" color={isLiked ? "#FF3040" : "#FFFFFF"} variant={isLiked ? "Bold" : "Linear"} />
+                <Heart size="30" color={isLiked ? "#FF3040" : "#FFFFFF"} variant={isLiked ? "Bold" : "Linear"} />
               </View>
               <Text style={styles.actionText}>{formatCount(likesCount)}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton} onPress={() => setShowComments(true)}>
               <View style={styles.iconWrapper}>
-                <MessageText size="32" color="#FFFFFF" variant="Linear" />
+                <MessageText size="28" color="#FFFFFF" variant="Linear" />
               </View>
               <Text style={styles.actionText}>{formatCount(commentsCount)}</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton}>
+              <View style={styles.iconWrapper}>
+                <Refresh2 size="28" color="#FFFFFF" variant="Linear" />
+              </View>
+              <Text style={styles.actionText}>735</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
               <View style={styles.iconWrapper}>
-                <Send2 size="32" color="#FFFFFF" variant="Linear" />
+                <Send2 size="28" color="#FFFFFF" variant="Linear" />
               </View>
-              <Text style={styles.actionText}>Share</Text>
+              <Text style={styles.actionText}>17K</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton}>
               <View style={styles.iconWrapper}>
-                <More size="24" color="#FFFFFF" variant="Linear" />
+                <More size="24" color="#FFFFFF" variant="Linear" style={{ transform: [{ rotate: '90deg' }] }} />
               </View>
             </TouchableOpacity>
+            <View style={styles.musicRecord}>
+              <Image source={{ uri: `https://i.pravatar.cc/150?u=${item.user.id}` }} style={styles.musicRecordImage} />
+            </View>
           </View>
         </View>
 
@@ -291,20 +307,29 @@ const styles = StyleSheet.create({
   },
   bottomSection: {
     paddingRight: 70, // Space for right actions
-    marginBottom: 20,
+    marginBottom: 0,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+  avatarRing: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 2,
+    borderColor: '#E79C2A',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
   },
   avatarImage: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1.5,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 2,
     borderColor: 'white',
-    marginRight: 10,
   },
   username: {
     color: 'white',
@@ -318,7 +343,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 16,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: 'white',
   },
@@ -338,16 +363,25 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,
     lineHeight: 20,
+    marginBottom: 4,
+  },
+  hashtags: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   musicRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    marginBottom: 6,
   },
   musicText: {
     color: 'white',
-    fontSize: 13,
-    marginLeft: 8,
+    fontSize: 12,
+    marginLeft: 6,
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,
@@ -359,7 +393,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     alignItems: 'center',
-    marginBottom: 22,
+    marginBottom: 18,
   },
   iconWrapper: {
     marginBottom: 4,
@@ -377,6 +411,22 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,
   },
+  musicRecord: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+    marginTop: 5,
+  },
+  musicRecordImage: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+  }
 });
 
 export default ReelItem;

@@ -4,18 +4,23 @@ import Video from 'react-native-video';
 import ReelItem from '../components/ReelItem';
 import PhotoItem from '../components/PhotoItem';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { Camera, ArrowLeft } from 'iconsax-react-native';
+import { Camera, ArrowLeft, Add, HambergerMenu, Grid3, VideoPlay, Profile2User, UserAdd } from 'iconsax-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCreatorProfile } from '../hooks/useCreatorProfile';
+import { useProfileData } from '../hooks/useProfileData';
 import { NormalizedVideo, NormalizedPhoto } from '../types';
 
 const { width, height } = Dimensions.get('window');
+
+const DEFAULT_USER = { name: 'Henry Coutry', id: 1, username: 'henry' };
 
 const ProfileScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const videoItem = route.params?.videoItem;
   const insets = useSafeAreaInsets();
+  
+  const userParam = route.params?.user || DEFAULT_USER;
 
   const {
     creator,
@@ -26,15 +31,17 @@ const ProfileScreen = () => {
     toggleFollow,
     loadMorePhotos,
     loadMoreVideos,
-  } = useCreatorProfile(route.params?.user || { name: 'Henry Coutry', id: 1, username: 'henry' });
+  } = useCreatorProfile(userParam);
   
   const [activeTab, setActiveTab] = useState('Photos');
   const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
   const [playingVideo, setPlayingVideo] = useState<NormalizedVideo | null>(null);
   const [playingPhoto, setPlayingPhoto] = useState<NormalizedPhoto | null>(null);
 
+  const { profileData } = useProfileData();
+
   // Format username fallback
-  const username = creator.username || `@${creator.name.toLowerCase().replace(/\s+/g, '_')}`;
+  const displayUsername = profileData.username || `@${(profileData.name || 'User').toLowerCase().replace(/\s+/g, '_')}`;
 
   const bannerUri = creator.coverUrl || videoItem?.image || photos[0]?.thumbnail || 'https://images.pexels.com/photos/2559941/pexels-photo-2559941.jpeg?auto=compress&cs=tinysrgb&w=800';
 
@@ -76,122 +83,121 @@ const ProfileScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, 10) }]}>
+      {/* Header */}
+      <View style={styles.headerContainer}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerUsername}>{displayUsername} ∨</Text>
+        </View>
+        <View style={styles.headerRight}>
+          <Text style={styles.atIcon}>@</Text>
+          <Add size={28} color="#000" style={styles.headerIcon} />
+          <HambergerMenu size={28} color="#000" style={styles.headerIcon} />
+        </View>
+      </View>
+
       <ScrollView 
-        bounces={false} 
+        bounces={true} 
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={400}
       >
-        {/* Banner */}
-        <View style={styles.bannerContainer}>
-          <Image 
-            source={{ uri: bannerUri }} 
-            style={styles.bannerImage} 
-          />
-          {/* Back button overlay */}
+        {/* Profile Stats Row */}
+        <View style={styles.profileStatsRow}>
           <TouchableOpacity 
-            style={[styles.backBtn, { top: Math.max(insets.top, 10) }]} 
-            onPress={() => navigation.goBack()}
-          >
-            <ArrowLeft size={24} color="#FFF" variant="Linear" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Profile Details */}
-        <View style={styles.profileSection}>
-          <TouchableOpacity 
-            style={styles.avatarContainer} 
+            style={styles.avatarSection} 
             activeOpacity={0.9} 
             onLongPress={() => setIsAvatarExpanded(true)}
           >
+            <View style={styles.shareNoteBadge}>
+              <Text style={styles.shareNoteText}>Share</Text>
+              <Text style={styles.shareNoteText}>note</Text>
+            </View>
             <Image source={{ uri: `https://i.pravatar.cc/150?u=${creator.id}` }} style={styles.avatar} />
-            <View style={styles.cameraBadge}>
-              <Camera size={12} color="#FFF" variant="Bold" />
+            <View style={styles.addStoryBadge}>
+              <Add size={12} color="#FFF" />
             </View>
           </TouchableOpacity>
-          
-          <Text style={styles.name}>{creator.name}</Text>
-          <Text style={styles.handle}>{username}</Text>
-          
-          {/* Stats */}
-          <View style={styles.statsContainer}>
+
+          <View style={styles.statsSection}>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{photos.length + videos.length}</Text>
-              <Text style={styles.statLabel}>Post</Text>
+              <Text style={styles.statValue}>358</Text>
+              <Text style={styles.statLabel}>Posts</Text>
             </View>
-            <View style={styles.statDivider} />
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{(socialProfile.followersCount / 1000).toFixed(1)}K</Text>
-              <Text style={styles.statLabel}>followers</Text>
+              <Text style={styles.statValue}>153,7K</Text>
+              <Text style={styles.statLabel}>Following</Text>
             </View>
-            <View style={styles.statDivider} />
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{socialProfile.followingCount}</Text>
-              <Text style={styles.statLabel}>following</Text>
+              <Text style={styles.statValue}>268</Text>
+              <Text style={styles.statLabel}>Followers</Text>
             </View>
-          </View>
-          
-          {/* Action Buttons */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity style={styles.messageBtn} onPress={handleMessage}>
-              <Text style={styles.messageBtnText}>Message</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.followBtn, socialProfile.isFollowing && styles.followingBtn]} 
-              onPress={toggleFollow}
-            >
-              <Text style={[styles.followBtnText, socialProfile.isFollowing && styles.followingBtnText]}>
-                {socialProfile.isFollowing ? 'Following' : 'Follow'}
-              </Text>
-            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Tabs */}
-        <View style={styles.tabsContainer}>
-          {['Photos', 'Videos', 'Saved'].map((tab) => (
+        {/* Bio Section */}
+        <View style={styles.bioSection}>
+          {!!profileData.name && <Text style={[styles.bioText, { fontWeight: 'bold' }]}>{profileData.name}</Text>}
+          {!!profileData.location && <Text style={styles.bioText}>{profileData.location}</Text>}
+          {!!profileData.activities && <Text style={styles.bioLink}>{profileData.activities}</Text>}
+          {!!profileData.bio && <Text style={styles.bioText}>{profileData.bio}</Text>}
+          {!!profileData.website && (
+            <TouchableOpacity>
+              <Text style={styles.bioLinkUrl}>🔗 {profileData.website}</Text>
+            </TouchableOpacity>
+          )}
+          {!!profileData.direction && <Text style={styles.bioText}>{profileData.direction}</Text>}
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionButtonsRow}>
+          <TouchableOpacity 
+            style={styles.actionBtn}
+            onPress={() => navigation.navigate('EditProfile')}
+          >
+            <Text style={styles.actionBtnText}>Edit profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtn}>
+            <Text style={styles.actionBtnText}>Share profile</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionIconBtn}>
+            <UserAdd size={20} color="#000" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Tabs Row */}
+        <View style={styles.tabsRow}>
+          <View style={styles.tabActive}>
+            <Grid3 size={28} color="#000" variant="Bold" />
+          </View>
+          <View style={styles.tabInactive}>
+            <VideoPlay size={28} color="#888" variant="Outline" />
+          </View>
+          <View style={styles.tabInactive}>
+            <Profile2User size={28} color="#888" variant="Outline" />
+          </View>
+        </View>
+
+        {/* Standard 3-Column Grid */}
+        <View style={styles.gridWrapper}>
+          {photos.map((item, index) => (
             <TouchableOpacity 
-              key={tab} 
-              style={[styles.tab, activeTab === tab && styles.activeTab]}
-              onPress={() => setActiveTab(tab)}
+              key={index} 
+              style={[
+                styles.gridItem, 
+                { width: (width - 2) / 3, height: (width - 2) / 3 },
+                index % 3 !== 2 && { marginRight: 1 }, // Add small gap between columns
+                index >= 3 && { marginTop: 1 } // Add small gap between rows
+              ]}
+              onPress={() => handleMediaPress(item)}
             >
-              <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}</Text>
+              <Image source={{ uri: item.thumbnail }} style={styles.gridImage} />
             </TouchableOpacity>
           ))}
         </View>
-        <View style={styles.tabUnderlineFull} />
-
-        {/* Dynamic Masonry Grid */}
-        {(() => {
-          const items = activeTab === 'Photos' ? photos : activeTab === 'Videos' ? videos : [];
-          const chunks = [];
-          for (let i = 0; i < items.length; i += 3) {
-            chunks.push(items.slice(i, i + 3));
-          }
-          return chunks.map((chunk, index) => (
-            <View key={index} style={[styles.gridContainer, index !== chunks.length - 1 && { marginBottom: 10 }]}>
-               <TouchableOpacity style={styles.gridLeft} onPress={() => handleMediaPress(chunk[0])} activeOpacity={0.8}>
-                  {chunk[0] && <Image source={{ uri: chunk[0].thumbnail }} style={styles.largeImage} />}
-               </TouchableOpacity>
-               <View style={styles.gridRight}>
-                  <TouchableOpacity onPress={() => handleMediaPress(chunk[1])} activeOpacity={0.8}>
-                    {chunk[1] && <Image source={{ uri: chunk[1].thumbnail }} style={styles.smallImageTop} />}
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleMediaPress(chunk[2])} activeOpacity={0.8}>
-                    {chunk[2] && <Image source={{ uri: chunk[2].thumbnail }} style={styles.smallImageBottom} />}
-                  </TouchableOpacity>
-               </View>
-            </View>
-          ));
-        })()}
         
-        {loading && <ActivityIndicator style={{ margin: 20 }} color="#E79C2A" />}
+        {loading && <ActivityIndicator style={{ margin: 20 }} color="#000" />}
 
-        {/* Attribution */}
-        <View style={{ alignItems: 'center', marginVertical: 30 }}>
-          <Text style={{ color: '#666', fontSize: 12 }}>Photos provided by Pexels</Text>
-        </View>
       </ScrollView>
 
       {/* Full Screen Avatar Modal */}
@@ -314,184 +320,180 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: '#080808', // deep black
+    backgroundColor: '#FFF',
   },
-  bannerContainer: {
-    width: '100%',
-    height: 190,
-    position: 'relative',
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingBottom: 10,
   },
-  bannerImage: {
-    width: '100%',
-    height: '100%',
-    opacity: 0.9,
-  },
-  backBtn: {
-    position: 'absolute',
-    left: 15,
-    padding: 10,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    borderRadius: 20,
-    justifyContent: 'center',
+  headerLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  profileSection: {
-    alignItems: 'center',
-    marginTop: -45,
+  headerUsername: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#000',
   },
-  avatarContainer: {
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerIcon: {
+    marginLeft: 20,
+  },
+  atIcon: {
+    fontSize: 24,
+    fontWeight: '500',
+    color: '#000',
+  },
+  profileStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    marginTop: 15,
+  },
+  avatarSection: {
     position: 'relative',
+    marginRight: 20,
   },
   avatar: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 3,
-    borderColor: '#080808',
+    width: 86,
+    height: 86,
+    borderRadius: 43,
+    backgroundColor: '#EAEAEA',
   },
-  cameraBadge: {
+  shareNoteBadge: {
     position: 'absolute',
+    top: -15,
+    left: -5,
+    backgroundColor: '#FFF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+    zIndex: 10,
+    alignItems: 'center',
+  },
+  shareNoteText: {
+    fontSize: 10,
+    color: '#333',
+    fontWeight: '500',
+  },
+  addStoryBadge: {
+    position: 'absolute',
+    bottom: 0,
     right: 0,
-    bottom: 5,
-    backgroundColor: '#E79C2A', // Orange badge
+    backgroundColor: '#000',
     width: 24,
     height: 24,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#080808',
+    borderColor: '#FFF',
   },
-  name: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 10,
-  },
-  handle: {
-    color: '#999',
-    fontSize: 13,
-    marginTop: 2,
-  },
-  statsContainer: {
+  statsSection: {
+    flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 25,
-    paddingHorizontal: 20,
+    justifyContent: 'space-between',
+    paddingRight: 10,
   },
   statBox: {
-    flex: 1,
     alignItems: 'center',
   },
   statValue: {
-    color: '#FFF',
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
   },
   statLabel: {
-    color: '#999',
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 13,
+    color: '#000',
+    marginTop: 2,
   },
-  statDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: '#222',
+  bioSection: {
+    paddingHorizontal: 15,
+    marginTop: 15,
   },
-  actionRow: {
-    flexDirection: 'row',
-    marginTop: 25,
-    paddingHorizontal: 20,
-    gap: 15, 
-  },
-  messageBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#444',
-    paddingVertical: 12,
-    borderRadius: 25,
-    alignItems: 'center',
-  },
-  messageBtnText: {
-    color: '#FFF',
+  bioText: {
     fontSize: 14,
-    fontWeight: '600',
+    color: '#000',
+    lineHeight: 20,
   },
-  followBtn: {
-    flex: 1,
-    backgroundColor: '#E79C2A',
-    paddingVertical: 12,
-    borderRadius: 25,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E79C2A',
-  },
-  followBtnText: {
-    color: '#FFF',
+  bioLink: {
     fontSize: 14,
-    fontWeight: '600',
+    color: '#1877F2',
+    lineHeight: 20,
   },
-  followingBtn: {
-    backgroundColor: 'transparent',
-    borderColor: '#444',
-  },
-  followingBtnText: {
-    color: '#FFF',
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    marginTop: 35,
-    justifyContent: 'space-between',
-    paddingHorizontal: 30,
-  },
-  tab: {
-    paddingBottom: 12,
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#FFF',
-  },
-  tabText: {
-    color: '#777',
-    fontSize: 15,
+  bioLinkUrl: {
+    fontSize: 14,
+    color: '#00376b',
+    lineHeight: 20,
     fontWeight: '500',
   },
-  activeTabText: {
-    color: '#FFF',
-  },
-  tabUnderlineFull: {
-    height: 1,
-    backgroundColor: '#222',
-    width: '100%',
-    marginTop: -1, 
-  },
-  gridContainer: {
+  actionButtonsRow: {
     flexDirection: 'row',
-    padding: 15,
-    gap: 10,
-    marginBottom: 40,
+    paddingHorizontal: 15,
+    marginTop: 15,
+    gap: 8,
   },
-  gridLeft: {
+  actionBtn: {
     flex: 1,
+    backgroundColor: '#EFEFEF',
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  gridRight: {
+  actionBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+  },
+  actionIconBtn: {
+    backgroundColor: '#EFEFEF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabsRow: {
+    flexDirection: 'row',
+    marginTop: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#DBDBDB',
+  },
+  tabActive: {
     flex: 1,
-    gap: 10,
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: '#000',
   },
-  largeImage: {
-    width: '100%',
-    height: 300,
-    borderRadius: 15,
+  tabInactive: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
   },
-  smallImageTop: {
-    width: '100%',
-    height: 145,
-    borderRadius: 15,
+  gridWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
-  smallImageBottom: {
+  gridItem: {
+    backgroundColor: '#EAEAEA',
+  },
+  gridImage: {
     width: '100%',
-    height: 145,
-    borderRadius: 15,
+    height: '100%',
   },
 });
 

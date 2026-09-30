@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, FlatList, Dimensions, ActivityIndicator, Text } from 'react-native';
+import { View, StyleSheet, FlatList, Dimensions, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getPopularVideos } from '../api/pexels';
 import { PexelsVideo } from '../types';
 import ReelItem from '../components/ReelItem';
@@ -7,6 +8,7 @@ import ReelItem from '../components/ReelItem';
 const { height } = Dimensions.get('window');
 
 const ReelsScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const [videos, setVideos] = useState<PexelsVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
@@ -75,6 +77,19 @@ const ReelsScreen: React.FC = () => {
         onEndReached={() => setPage(prev => prev + 1)}
         onEndReachedThreshold={0.5}
       />
+      
+      {/* Top Header Overlay */}
+      <View style={[styles.headerOverlay, { paddingTop: Math.max(insets.top, 15) }]}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerTitleActive}>Reels</Text>
+          <Text style={styles.headerTitleInactive}>Friends</Text>
+          <View style={styles.friendsCircles}>
+            <View style={[styles.friendCircle, { backgroundColor: '#FF6B6B' }]} />
+            <View style={[styles.friendCircle, { backgroundColor: '#4ECDC4', marginLeft: -8 }]} />
+            <View style={[styles.friendCircle, { backgroundColor: '#C7F464', marginLeft: -8 }]} />
+          </View>
+        </View>
+      </View>
     </View>
   );
 };
@@ -93,6 +108,48 @@ const styles = StyleSheet.create({
   errorText: {
     color: 'white',
     fontSize: 16,
+  },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    paddingHorizontal: 15,
+    zIndex: 10,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  headerTitleActive: {
+    color: 'white',
+    fontSize: 22,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  headerTitleInactive: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 18,
+    fontWeight: '600',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  friendsCircles: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 5,
+  },
+  friendCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#000',
   },
 });
 

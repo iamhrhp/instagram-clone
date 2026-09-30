@@ -3,12 +3,79 @@ import { PexelsResponse, PexelsPhotoResponse, PexelsPhoto, PexelsVideo, Normaliz
 
 const PEXELS_API_KEY = '3lSmZUWT3CDsPKpQwzzdL1A7NNsvVt9FiQvlsOdNwMojQzHAbg43Od3r';
 
-const pexelsApi = axios.create({
+export const pexelsApi = axios.create({
   baseURL: 'https://api.pexels.com',
   headers: {
     Authorization: PEXELS_API_KEY,
   },
 });
+
+pexelsApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 429) {
+      console.warn('Pexels API Rate Limit Exceeded. Using fallback data.');
+      
+      const isVideo = error.config.url.includes('/videos');
+      
+      if (isVideo) {
+        return Promise.resolve({
+          data: {
+            page: 1,
+            per_page: 15,
+            total_results: 100,
+            url: '',
+            videos: Array.from({ length: 15 }).map((_, i) => ({
+              id: Date.now() + i,
+              width: 1080,
+              height: 1920,
+              duration: 15,
+              url: 'https://www.pexels.com/',
+              image: `https://picsum.photos/seed/video${i}/1080/1920`,
+              user: { id: 1, name: 'Demo User', url: '' },
+              video_files: [
+                { id: 1, quality: 'hd', file_type: 'video/mp4', width: 1080, height: 1920, fps: 30, link: 'https://www.w3schools.com/html/mov_bbb.mp4' }
+              ],
+              video_pictures: []
+            }))
+          }
+        });
+      }
+      
+      return Promise.resolve({
+        data: {
+          page: 1,
+          per_page: 15,
+          total_results: 100,
+          next_page: '',
+          photos: Array.from({ length: 15 }).map((_, i) => ({
+            id: Date.now() + i,
+            width: 1080,
+            height: 1080,
+            url: '',
+            photographer: 'Demo User',
+            photographer_url: '',
+            photographer_id: 1,
+            avg_color: '#000',
+            src: {
+              original: `https://picsum.photos/seed/photo${i}/1080/1080`,
+              large2x: `https://picsum.photos/seed/photo${i}/1080/1080`,
+              large: `https://picsum.photos/seed/photo${i}/1080/1080`,
+              medium: `https://picsum.photos/seed/photo${i}/800/800`,
+              small: `https://picsum.photos/seed/photo${i}/400/400`,
+              portrait: `https://picsum.photos/seed/photo${i}/800/1200`,
+              landscape: `https://picsum.photos/seed/photo${i}/1200/800`,
+              tiny: `https://picsum.photos/seed/photo${i}/200/200`,
+            },
+            liked: false,
+            alt: 'Demo Image'
+          }))
+        }
+      });
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const searchPhotos = async ({ query, orientation, page = 1, perPage = 15 }: { query: string; orientation?: string; page?: number; perPage?: number }): Promise<NormalizedPhoto[]> => {
   const params: any = { query, page, per_page: perPage };
