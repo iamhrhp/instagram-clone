@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions, Modal } from 'react-native';
+import Video from 'react-native-video';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Camera, ArrowLeft } from 'iconsax-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,6 +17,7 @@ const ProfileScreen = () => {
   const [activeTab, setActiveTab] = useState('Photos');
   const [isFollowing, setIsFollowing] = useState(false);
   const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
   // Format username fallback
   const username = `@${user.name.toLowerCase().replace(/\s+/g, '_')}`;
@@ -25,6 +27,8 @@ const ProfileScreen = () => {
   const pic1 = videoItem?.video_pictures?.[0]?.picture || 'https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg?auto=compress&cs=tinysrgb&w=400';
   const pic2 = videoItem?.video_pictures?.[2]?.picture || 'https://images.pexels.com/photos/1382731/pexels-photo-1382731.jpeg?auto=compress&cs=tinysrgb&w=400';
   const pic3 = videoItem?.video_pictures?.[4]?.picture || 'https://images.pexels.com/photos/1126993/pexels-photo-1126993.jpeg?auto=compress&cs=tinysrgb&w=400';
+
+  const videoFile = videoItem?.video_files?.find((file: any) => file.quality === 'hd' && file.height > file.width) || videoItem?.video_files?.[0];
 
   // Generate deterministic pseudo-stats based on the user's ID from Pexels API
   const postCount = (user.id % 400) + 12;
@@ -119,12 +123,16 @@ const ProfileScreen = () => {
 
         {/* Masonry Grid */}
         <View style={styles.gridContainer}>
-           <View style={styles.gridLeft}>
+           <TouchableOpacity style={styles.gridLeft} onPress={() => setIsPlayingVideo(true)} activeOpacity={0.8}>
               <Image source={{ uri: pic1 }} style={styles.largeImage} />
-           </View>
+           </TouchableOpacity>
            <View style={styles.gridRight}>
-              <Image source={{ uri: pic2 }} style={styles.smallImageTop} />
-              <Image source={{ uri: pic3 }} style={styles.smallImageBottom} />
+              <TouchableOpacity onPress={() => setIsPlayingVideo(true)} activeOpacity={0.8}>
+                <Image source={{ uri: pic2 }} style={styles.smallImageTop} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setIsPlayingVideo(true)} activeOpacity={0.8}>
+                <Image source={{ uri: pic3 }} style={styles.smallImageBottom} />
+              </TouchableOpacity>
            </View>
         </View>
       </ScrollView>
@@ -141,6 +149,27 @@ const ProfileScreen = () => {
             source={{ uri: `https://i.pravatar.cc/600?u=${user.id}` }} 
             style={styles.fullScreenAvatar} 
           />
+        </View>
+      </Modal>
+
+      {/* Full Screen Video Modal */}
+      <Modal visible={isPlayingVideo} transparent={true} animationType="slide">
+        <View style={styles.videoModalContainer}>
+          {videoFile?.link ? (
+            <Video
+              source={{ uri: videoFile.link }}
+              style={styles.fullScreenVideo}
+              resizeMode="contain"
+              repeat={true}
+              ignoreSilentSwitch="ignore"
+            />
+          ) : null}
+          <TouchableOpacity 
+            style={[styles.videoCloseBtn, { top: Math.max(insets.top, 20) }]} 
+            onPress={() => setIsPlayingVideo(false)}
+          >
+            <Text style={styles.videoCloseText}>✕</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
     </View>
@@ -163,6 +192,30 @@ const styles = StyleSheet.create({
     borderRadius: (width * 0.9) / 2,
     borderWidth: 2,
     borderColor: '#333',
+  },
+  videoModalContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  fullScreenVideo: {
+    width: '100%',
+    height: '100%',
+  },
+  videoCloseBtn: {
+    position: 'absolute',
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  videoCloseText: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   container: {
     flex: 1,
