@@ -1,47 +1,88 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions, Modal, ActivityIndicator, FlatList } from 'react-native';
 import Video from 'react-native-video';
+import ReelItem from '../components/ReelItem';
+import PhotoItem from '../components/PhotoItem';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Camera, ArrowLeft } from 'iconsax-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCreatorProfile } from '../hooks/useCreatorProfile';
+import { NormalizedVideo, NormalizedPhoto } from '../types';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const ProfileScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-  const user = route.params?.user || { name: 'Henry Coutry', id: 1 };
   const videoItem = route.params?.videoItem;
   const insets = useSafeAreaInsets();
+
+  const {
+    creator,
+    photos,
+    videos,
+    loading,
+    socialProfile,
+    toggleFollow,
+    loadMorePhotos,
+    loadMoreVideos,
+  } = useCreatorProfile(route.params?.user || { name: 'Henry Coutry', id: 1, username: 'henry' });
   
   const [activeTab, setActiveTab] = useState('Photos');
-  const [isFollowing, setIsFollowing] = useState(false);
   const [isAvatarExpanded, setIsAvatarExpanded] = useState(false);
-  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
+  const [playingVideo, setPlayingVideo] = useState<NormalizedVideo | null>(null);
+  const [playingPhoto, setPlayingPhoto] = useState<NormalizedPhoto | null>(null);
 
   // Format username fallback
-  const username = `@${user.name.toLowerCase().replace(/\s+/g, '_')}`;
+  const username = creator.username || `@${creator.name.toLowerCase().replace(/\s+/g, '_')}`;
 
-  // Dynamic Data Extraction from Pexels API
-  const bannerUri = videoItem?.image || 'https://images.pexels.com/photos/2559941/pexels-photo-2559941.jpeg?auto=compress&cs=tinysrgb&w=800';
-  const pic1 = videoItem?.video_pictures?.[0]?.picture || 'https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg?auto=compress&cs=tinysrgb&w=400';
-  const pic2 = videoItem?.video_pictures?.[2]?.picture || 'https://images.pexels.com/photos/1382731/pexels-photo-1382731.jpeg?auto=compress&cs=tinysrgb&w=400';
-  const pic3 = videoItem?.video_pictures?.[4]?.picture || 'https://images.pexels.com/photos/1126993/pexels-photo-1126993.jpeg?auto=compress&cs=tinysrgb&w=400';
+  const bannerUri = creator.coverUrl || videoItem?.image || photos[0]?.thumbnail || 'https://images.pexels.com/photos/2559941/pexels-photo-2559941.jpeg?auto=compress&cs=tinysrgb&w=800';
 
-  const videoFile = videoItem?.video_files?.find((file: any) => file.quality === 'hd' && file.height > file.width) || videoItem?.video_files?.[0];
+  const handleScroll = (event: any) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - 400;
+    if (isCloseToBottom) {
+      if (activeTab === 'Photos') loadMorePhotos();
+      if (activeTab === 'Videos') loadMoreVideos();
+    }
+  };
 
-  // Generate deterministic pseudo-stats based on the user's ID from Pexels API
-  const postCount = (user.id % 400) + 12;
-  const followersCount = ((user.id % 90) + 10) + ((user.id % 9) * 0.1); 
-  const followingCount = (user.id % 500) + 100;
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+
+  const handleMediaPress = (item: any) => {
+    if (item.type === 'video') {
+      const idx = videos.findIndex(v => v.id === item.id);
+      setActiveVideoIndex(idx >= 0 ? idx : 0);
+      setPlayingVideo(item);
+    } else if (item.type === 'photo') {
+      const idx = photos.findIndex(p => p.id === item.id);
+      setActiveVideoIndex(idx >= 0 ? idx : 0);
+      setPlayingPhoto(item);
+    }
+  };
+
+  const handleViewableItemsChanged = React.useRef(({ viewableItems }: any) => {
+    if (viewableItems.length > 0) {
+      setActiveVideoIndex(viewableItems[0].index);
+    }
+  }).current;
+
+  const viewabilityConfig = React.useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
 
   const handleMessage = () => {
-    navigation.navigate('Message', { user });
+    navigation.navigate('Message', { user: creator });
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        bounces={false} 
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={400}
+      >
         {/* Banner */}
         <View style={styles.bannerContainer}>
           <Image 
@@ -64,29 +105,29 @@ const ProfileScreen = () => {
             activeOpacity={0.9} 
             onLongPress={() => setIsAvatarExpanded(true)}
           >
-            <Image source={{ uri: `https://i.pravatar.cc/150?u=${user.id}` }} style={styles.avatar} />
+            <Image source={{ uri: `https://i.pravatar.cc/150?u=${creator.id}` }} style={styles.avatar} />
             <View style={styles.cameraBadge}>
               <Camera size={12} color="#FFF" variant="Bold" />
             </View>
           </TouchableOpacity>
           
-          <Text style={styles.name}>{user.name}</Text>
+          <Text style={styles.name}>{creator.name}</Text>
           <Text style={styles.handle}>{username}</Text>
           
           {/* Stats */}
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{postCount}</Text>
+              <Text style={styles.statValue}>{photos.length + videos.length}</Text>
               <Text style={styles.statLabel}>Post</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{followersCount.toFixed(1)}K</Text>
+              <Text style={styles.statValue}>{(socialProfile.followersCount / 1000).toFixed(1)}K</Text>
               <Text style={styles.statLabel}>followers</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{followingCount}</Text>
+              <Text style={styles.statValue}>{socialProfile.followingCount}</Text>
               <Text style={styles.statLabel}>following</Text>
             </View>
           </View>
@@ -97,11 +138,11 @@ const ProfileScreen = () => {
               <Text style={styles.messageBtnText}>Message</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.followBtn, isFollowing && styles.followingBtn]} 
-              onPress={() => setIsFollowing(!isFollowing)}
+              style={[styles.followBtn, socialProfile.isFollowing && styles.followingBtn]} 
+              onPress={toggleFollow}
             >
-              <Text style={[styles.followBtnText, isFollowing && styles.followingBtnText]}>
-                {isFollowing ? 'Following' : 'Follow'}
+              <Text style={[styles.followBtnText, socialProfile.isFollowing && styles.followingBtnText]}>
+                {socialProfile.isFollowing ? 'Following' : 'Follow'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -121,19 +162,35 @@ const ProfileScreen = () => {
         </View>
         <View style={styles.tabUnderlineFull} />
 
-        {/* Masonry Grid */}
-        <View style={styles.gridContainer}>
-           <TouchableOpacity style={styles.gridLeft} onPress={() => setIsPlayingVideo(true)} activeOpacity={0.8}>
-              <Image source={{ uri: pic1 }} style={styles.largeImage} />
-           </TouchableOpacity>
-           <View style={styles.gridRight}>
-              <TouchableOpacity onPress={() => setIsPlayingVideo(true)} activeOpacity={0.8}>
-                <Image source={{ uri: pic2 }} style={styles.smallImageTop} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setIsPlayingVideo(true)} activeOpacity={0.8}>
-                <Image source={{ uri: pic3 }} style={styles.smallImageBottom} />
-              </TouchableOpacity>
-           </View>
+        {/* Dynamic Masonry Grid */}
+        {(() => {
+          const items = activeTab === 'Photos' ? photos : activeTab === 'Videos' ? videos : [];
+          const chunks = [];
+          for (let i = 0; i < items.length; i += 3) {
+            chunks.push(items.slice(i, i + 3));
+          }
+          return chunks.map((chunk, index) => (
+            <View key={index} style={[styles.gridContainer, index !== chunks.length - 1 && { marginBottom: 10 }]}>
+               <TouchableOpacity style={styles.gridLeft} onPress={() => handleMediaPress(chunk[0])} activeOpacity={0.8}>
+                  {chunk[0] && <Image source={{ uri: chunk[0].thumbnail }} style={styles.largeImage} />}
+               </TouchableOpacity>
+               <View style={styles.gridRight}>
+                  <TouchableOpacity onPress={() => handleMediaPress(chunk[1])} activeOpacity={0.8}>
+                    {chunk[1] && <Image source={{ uri: chunk[1].thumbnail }} style={styles.smallImageTop} />}
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleMediaPress(chunk[2])} activeOpacity={0.8}>
+                    {chunk[2] && <Image source={{ uri: chunk[2].thumbnail }} style={styles.smallImageBottom} />}
+                  </TouchableOpacity>
+               </View>
+            </View>
+          ));
+        })()}
+        
+        {loading && <ActivityIndicator style={{ margin: 20 }} color="#E79C2A" />}
+
+        {/* Attribution */}
+        <View style={{ alignItems: 'center', marginVertical: 30 }}>
+          <Text style={{ color: '#666', fontSize: 12 }}>Photos provided by Pexels</Text>
         </View>
       </ScrollView>
 
@@ -146,30 +203,68 @@ const ProfileScreen = () => {
             activeOpacity={1}
           />
           <Image 
-            source={{ uri: `https://i.pravatar.cc/600?u=${user.id}` }} 
+            source={{ uri: `https://i.pravatar.cc/600?u=${creator.id}` }} 
             style={styles.fullScreenAvatar} 
           />
         </View>
       </Modal>
 
       {/* Full Screen Video Modal */}
-      <Modal visible={isPlayingVideo} transparent={true} animationType="slide">
+      <Modal visible={!!playingVideo} transparent={true} animationType="slide">
         <View style={styles.videoModalContainer}>
-          {videoFile?.link ? (
-            <Video
-              source={{ uri: videoFile.link }}
-              style={styles.fullScreenVideo}
-              resizeMode="contain"
-              repeat={true}
-              ignoreSilentSwitch="ignore"
-            />
-          ) : null}
-          <TouchableOpacity 
-            style={[styles.videoCloseBtn, { top: Math.max(insets.top, 20) }]} 
-            onPress={() => setIsPlayingVideo(false)}
-          >
-            <Text style={styles.videoCloseText}>✕</Text>
-          </TouchableOpacity>
+          <FlatList
+            data={videos}
+            initialScrollIndex={activeVideoIndex}
+            getItemLayout={(data, index) => ({ length: height, offset: height * index, index })}
+            renderItem={({ item, index }) => {
+              const pexelsVideoShape = {
+                id: Number(item.id),
+                width: item.width,
+                height: item.height,
+                url: item.videoUrl,
+                image: item.thumbnail,
+                duration: item.duration,
+                user: { id: item.creatorId, name: item.creatorName, url: item.creatorUrl },
+                video_files: item.videoFiles || [],
+                video_pictures: [],
+              };
+              return <ReelItem item={pexelsVideoShape as any} isActive={index === activeVideoIndex} onClose={() => setPlayingVideo(null)} />;
+            }}
+            keyExtractor={(item, idx) => `${item.id}-${idx}`}
+            pagingEnabled
+            showsVerticalScrollIndicator={false}
+            onViewableItemsChanged={handleViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            snapToInterval={height}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            disableIntervalMomentum={true}
+            onEndReached={loadMoreVideos}
+            onEndReachedThreshold={0.5}
+          />
+        </View>
+      </Modal>
+
+      {/* Full Screen Photo Modal */}
+      <Modal visible={!!playingPhoto} transparent={true} animationType="slide">
+        <View style={styles.videoModalContainer}>
+          <FlatList
+            data={photos}
+            initialScrollIndex={activeVideoIndex}
+            getItemLayout={(data, index) => ({ length: height, offset: height * index, index })}
+            renderItem={({ item }) => <PhotoItem item={item} onClose={() => setPlayingPhoto(null)} />}
+            keyExtractor={(item, idx) => `${item.id}-${idx}`}
+            pagingEnabled
+            showsVerticalScrollIndicator={false}
+            onViewableItemsChanged={handleViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
+            snapToInterval={height}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            disableIntervalMomentum={true}
+            onEndReached={loadMorePhotos}
+            onEndReachedThreshold={0.5}
+          />
         </View>
       </Modal>
     </View>
@@ -184,7 +279,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   fullScreenAvatarDismiss: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill as any,
   },
   fullScreenAvatar: {
     width: width * 0.9,

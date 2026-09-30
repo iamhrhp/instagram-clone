@@ -69,3 +69,49 @@ export interface PexelsPhotoResponse {
   next_page: string;
   photos: PexelsPhoto[];
 }
+
+export interface NormalizedPhoto {
+  id: string;
+  type: 'photo';
+  width: number;
+  height: number;
+  aspectRatio: number;
+  thumbnail: string;
+  mediumUrl: string;
+  largeUrl: string;
+  originalUrl: string;
+  photographerId?: number;
+  photographerName?: string;
+  photographerUrl?: string;
+}
+
+export interface NormalizedVideo {
+  id: string;
+  type: 'video';
+  width: number;
+  height: number;
+  duration: number;
+  thumbnail: string;
+  videoUrl: string;
+  videoFiles: VideoFile[];
+  creatorId?: number;
+  creatorName?: string;
+  creatorUrl?: string;
+}
+
+export interface Creator {
+  id: number;
+  name: string;
+  username: string;
+  profileUrl?: string;
+  avatarUrl?: string;
+  coverUrl?: string;
+}
+
+export interface SocialProfile {
+  followersCount: number;
+  followingCount: number;
+  isFollowing: boolean;
+  savedPhotos: string[];
+  savedVideos: string[];
+}

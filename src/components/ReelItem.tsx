@@ -1,9 +1,9 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback, TouchableOpacity, Image, Share, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableWithoutFeedback, TouchableOpacity, Image, Share, Modal, TextInput, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Video from 'react-native-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heart, MessageText, Send2, Pause, Music, More } from 'iconsax-react-native';
+import { Heart, MessageText, Send2, Pause, Music, More, ArrowLeft } from 'iconsax-react-native';
 import { PexelsVideo } from '../types';
 
 const { width, height } = Dimensions.get('window');
@@ -11,6 +11,7 @@ const { width, height } = Dimensions.get('window');
 interface ReelItemProps {
   item: PexelsVideo;
   isActive: boolean;
+  onClose?: () => void;
 }
 
 const formatCount = (num: number) => {
@@ -19,9 +20,9 @@ const formatCount = (num: number) => {
   return num.toString();
 };
 
-const ReelItem: React.FC<ReelItemProps> = ({ item, isActive }) => {
+const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
   const navigation = useNavigation<any>();
-  const videoRef = useRef<Video>(null);
+  const videoRef = useRef<any>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -32,7 +33,10 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive }) => {
   const commentsCount = (item.id % 2000) + 50;
 
   const [showComments, setShowComments] = useState(false);
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
   const insets = useSafeAreaInsets();
+
+  const fullText = item.user.name ? `Embark on a soul-refreshing journey where time slows down. This is a beautiful extended description that will show when you tap to expand. It can be quite long and will scroll inside its container while taking up the full width of the screen so it is easy to read. Adding a bit more text to demonstrate the fixed height and scrolling behavior effectively.` : 'A wonderful journey that continues...';
 
   const videoFile = item.video_files.find(file => file.quality === 'hd' && file.height > file.width) || item.video_files[0];
 
@@ -76,6 +80,15 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive }) => {
           playWhenInactive={false}
         />
         
+        {/* Header for Back Button */}
+        {onClose && (
+          <View style={[styles.header, { top: Math.max(insets.top, 10) }]}>
+            <TouchableOpacity onPress={onClose} style={styles.backButton}>
+              <ArrowLeft size={28} color="#FFFFFF" variant="Linear" style={styles.backIconShadow} />
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={{ width, height, position: 'absolute', top: 0, left: 0, justifyContent: 'flex-end', paddingBottom: Math.max(insets.bottom, 20), paddingHorizontal: 15 }}>
           {isPaused && (
             <View style={styles.pauseIconContainer}>
@@ -85,7 +98,7 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive }) => {
             </View>
           )}
           
-          <View style={styles.bottomSection}>
+          <View style={[styles.bottomSection, isDescExpanded && { paddingRight: 15, zIndex: 30 }]}>
             <View style={styles.userInfo}>
               <TouchableOpacity onPress={navigateToProfile}>
                 <Image 
@@ -103,9 +116,17 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive }) => {
                 <Text style={styles.followButtonText}>{isFollowing ? 'Following' : 'Follow'}</Text>
               </TouchableOpacity>
             </View>
-            <Text style={styles.description} numberOfLines={2}>
-              {item.user.name ? `Embark on a soul-refreshing journey where time slows down...more` : 'A wonderful journey...more'}
-            </Text>
+            <TouchableOpacity onPress={() => setIsDescExpanded(!isDescExpanded)} activeOpacity={0.8}>
+              {isDescExpanded ? (
+                <ScrollView style={{ maxHeight: 150 }} showsVerticalScrollIndicator={false}>
+                  <Text style={styles.description}>{fullText}</Text>
+                </ScrollView>
+              ) : (
+                <Text style={styles.description} numberOfLines={2}>
+                  {fullText}
+                </Text>
+              )}
+            </TouchableOpacity>
             <View style={styles.musicRow}>
               <Music size="14" color="#FFFFFF" variant="Bold" />
               <Text style={styles.musicText}>Original Audio - {item.user.name || 'User'}</Text>
@@ -183,6 +204,19 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive }) => {
 };
 
 const styles = StyleSheet.create({
+  header: {
+    position: 'absolute', left: 15, zIndex: 20,
+  },
+  backButton: {
+    padding: 5,
+  },
+  backIconShadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 3,
+  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -245,7 +279,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   pauseIconContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill as any,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,

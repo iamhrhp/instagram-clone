@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, FlatList, Dimensions, ActivityIndicator, Text } from 'react-native';
-import { fetchPopularVideos } from '../api/pexels';
+import { getPopularVideos } from '../api/pexels';
 import { PexelsVideo } from '../types';
 import ReelItem from '../components/ReelItem';
 
@@ -15,8 +15,8 @@ const ReelsScreen: React.FC = () => {
 
   const loadVideos = async (pageNumber: number) => {
     try {
-      const data = await fetchPopularVideos(pageNumber, 10);
-      setVideos(prev => [...prev, ...data.videos]);
+      const data = await getPopularVideos({ page: pageNumber, perPage: 10 });
+      setVideos(prev => [...prev, ...data]);
       setError(null);
     } catch (err) {
       console.error(err);
