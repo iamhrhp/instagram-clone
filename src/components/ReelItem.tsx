@@ -5,6 +5,7 @@ import Video from 'react-native-video';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart, Message, Send2, Pause, Music, More, ArrowLeft, Repeat, MusicSquare } from 'iconsax-react-native';
 import { PexelsVideo } from '../types';
+import { useProfileData } from '../hooks/useProfileData';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,6 +23,7 @@ const formatCount = (num: number) => {
 
 const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
   const navigation = useNavigation<any>();
+  const { profileData } = useProfileData();
   const videoRef = useRef<any>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
@@ -39,6 +41,8 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
   const fullText = item.user.name ? `Embark on a soul-refreshing journey where time slows down. This is a beautiful extended description that will show when you tap to expand. It can be quite long and will scroll inside its container while taking up the full width of the screen so it is easy to read. Adding a bit more text to demonstrate the fixed height and scrolling behavior effectively.` : 'A wonderful journey that continues...';
 
   const videoFile = item.video_files.find(file => file.quality === 'hd' && file.height > file.width) || item.video_files[0];
+
+  const bottomPadding = (onClose ? 0 : 80) + Math.max(insets.bottom, 20);
 
   const handlePress = () => setIsPaused(!isPaused);
 
@@ -68,17 +72,31 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
   return (
     <TouchableWithoutFeedback onPress={handlePress}>
       <View style={{ width, height, backgroundColor: 'black', overflow: 'hidden' }}>
-        <Video
-          ref={videoRef}
-          source={{ uri: videoFile.link }}
-          style={{ width, height, position: 'absolute', top: 0, left: 0 }}
-          resizeMode="cover"
-          repeat={true}
-          paused={!isActive || isPaused}
-          ignoreSilentSwitch="ignore"
-          playInBackground={false}
-          playWhenInactive={false}
-        />
+        {isActive ? (
+          <Video
+            ref={videoRef}
+            source={{ uri: videoFile.link }}
+            style={{ width, height, position: 'absolute', top: 0, left: 0 }}
+            resizeMode="cover"
+            repeat={true}
+            paused={isPaused}
+            ignoreSilentSwitch="ignore"
+            playInBackground={false}
+            playWhenInactive={false}
+            bufferConfig={{
+              minBufferMs: 2000,
+              maxBufferMs: 5000,
+              bufferForPlaybackMs: 1000,
+              bufferForPlaybackAfterRebufferMs: 1500
+            }}
+          />
+        ) : (
+          <Image 
+            source={{ uri: item.image }} 
+            style={{ width, height, position: 'absolute', top: 0, left: 0 }} 
+            resizeMode="cover" 
+          />
+        )}
         
         {/* Header for Back Button */}
         {onClose && (
@@ -89,7 +107,7 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
           </View>
         )}
 
-        <View style={{ width, height, position: 'absolute', top: 0, left: 0, justifyContent: 'flex-end', paddingBottom: 80 + Math.max(insets.bottom, 20), paddingHorizontal: 15 }}>
+        <View style={{ width, height, position: 'absolute', top: 0, left: 0, justifyContent: 'flex-end', paddingBottom: bottomPadding, paddingHorizontal: 15 }}>
           {isPaused && (
             <View style={styles.pauseIconContainer}>
               <View style={styles.pauseIconBg}>
@@ -139,9 +157,17 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
                 <Text style={styles.hashtags}>#Lorem #ipsum #dolor</Text>
               )}
             </TouchableOpacity>
+
+            {/* Quick Comment Input */}
+            <View style={styles.quickCommentRow}>
+              <Image source={{ uri: profileData?.username ? `https://i.pravatar.cc/150?u=${profileData.username}` : `https://i.pravatar.cc/150?u=current` }} style={styles.quickCommentAvatar} />
+              <TouchableOpacity style={styles.quickCommentInput} onPress={() => setShowComments(true)}>
+                <Text style={styles.quickCommentPlaceholder}>Add a comment...</Text>
+              </TouchableOpacity>
+            </View>
           </View>
           
-          <View style={[styles.rightSection, { bottom: 80 + Math.max(insets.bottom, 20) + 10 }]}>
+          <View style={[styles.rightSection, { bottom: bottomPadding + 10 }]}>
             <TouchableOpacity style={styles.actionButton} onPress={toggleLike}>
               <View style={styles.iconWrapper}>
                 <Heart size="30" color={isLiked ? "#FF3040" : "#FFFFFF"} variant={isLiked ? "Bold" : "Linear"} />
@@ -190,27 +216,78 @@ const ReelItem: React.FC<ReelItemProps> = ({ item, isActive, onClose }) => {
                 <View style={styles.modalDismiss} />
               </TouchableWithoutFeedback>
               <View style={[styles.commentsContainer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
+                <View style={styles.dragIndicator} />
                 <View style={styles.commentsHeader}>
-                  <Text style={styles.commentsTitle}>{formatCount(commentsCount)} comments</Text>
-                  <TouchableOpacity onPress={() => setShowComments(false)}>
-                    <Text style={styles.closeButton}>✕</Text>
-                  </TouchableOpacity>
+                  <Text style={styles.commentsTitle}>Comments</Text>
                 </View>
-                <View style={styles.commentsBody}>
-                  <Text style={styles.dummyComment}><Text style={styles.commentUser}>alex_travels</Text> This looks absolutely incredible! 😍</Text>
-                  <Text style={styles.dummyComment}><Text style={styles.commentUser}>sarah.j</Text> Added to my bucket list.</Text>
-                  <Text style={styles.dummyComment}><Text style={styles.commentUser}>photo_guru</Text> What camera did you use for this?</Text>
-                </View>
+                <ScrollView style={styles.commentsBody}>
+                  {/* Comment Item 1 */}
+                  <View style={styles.commentItem}>
+                    <Image source={{ uri: 'https://i.pravatar.cc/150?u=12' }} style={styles.commentAvatar} />
+                    <View style={styles.commentContent}>
+                      <Text style={styles.commentUser}>kalindi_rainbows <Text style={styles.commentTime}>1m</Text></Text>
+                      <Text style={styles.commentText}>It's giving art</Text>
+                      <View style={styles.commentActions}>
+                        <Text style={styles.commentActionText}>Reply</Text>
+                        <Text style={styles.commentActionText}>Edit</Text>
+                      </View>
+                    </View>
+                    <View style={styles.commentLikeContainer}>
+                      <Heart size="14" color="#888" variant="Linear" />
+                      <Text style={styles.commentLikeCount}>1</Text>
+                    </View>
+                  </View>
+
+                  {/* Comment Item 2 */}
+                  <View style={styles.commentItem}>
+                    <Image source={{ uri: 'https://i.pravatar.cc/150?u=13' }} style={styles.commentAvatar} />
+                    <View style={styles.commentContent}>
+                      <Text style={styles.commentUser}>super_santi_73 <Text style={styles.commentTime}>5h</Text></Text>
+                      <Text style={styles.commentText}>Talented!</Text>
+                      <View style={styles.commentActions}>
+                        <Text style={styles.commentActionText}>Reply</Text>
+                      </View>
+                    </View>
+                    <View style={styles.commentLikeContainer}>
+                      <Heart size="14" color="#888" variant="Linear" />
+                      <Text style={styles.commentLikeCount}>2</Text>
+                    </View>
+                  </View>
+
+                  {/* Comment Item 3 */}
+                  <View style={styles.commentItem}>
+                    <Image source={{ uri: 'https://i.pravatar.cc/150?u=14' }} style={styles.commentAvatar} />
+                    <View style={styles.commentContent}>
+                      <Text style={styles.commentUser}>alexanyways <Text style={styles.commentTime}>5h</Text></Text>
+                      <Text style={styles.commentText}>Love this</Text>
+                      <View style={styles.commentActions}>
+                        <Text style={styles.commentActionText}>Reply</Text>
+                      </View>
+                      <View style={styles.repliesContainer}>
+                        <View style={styles.repliesLine} />
+                        <Text style={styles.repliesText}>View 2 replies</Text>
+                      </View>
+                    </View>
+                    <View style={styles.commentLikeContainer}>
+                      <Heart size="14" color="#888" variant="Linear" />
+                    </View>
+                  </View>
+                </ScrollView>
+
+                {/* Input Row */}
                 <View style={styles.commentInputContainer}>
-                  <TextInput
-                    style={styles.realInput}
-                    placeholder={`Add a comment for ${item.user.name || 'User'}...`}
-                    placeholderTextColor="#999"
-                    value={commentText}
-                    onChangeText={setCommentText}
-                    returnKeyType="send"
-                    onSubmitEditing={() => setCommentText('')}
-                  />
+                  <Image source={{ uri: profileData?.username ? `https://i.pravatar.cc/150?u=${profileData.username}` : `https://i.pravatar.cc/150?u=current` }} style={styles.inputAvatar} />
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      style={styles.realInput}
+                      placeholder="Add a comment..."
+                      placeholderTextColor="#999"
+                      value={commentText}
+                      onChangeText={setCommentText}
+                      returnKeyType="send"
+                      onSubmitEditing={() => setCommentText('')}
+                    />
+                  </View>
                 </View>
               </View>
             </View>
@@ -244,57 +321,140 @@ const styles = StyleSheet.create({
   modalDismiss: {
     flex: 1,
   },
+  dragIndicator: {
+    width: 36,
+    height: 4,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
   commentsContainer: {
-    backgroundColor: '#1E1E1E',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    height: '60%',
-    paddingHorizontal: 15,
-    paddingTop: 15,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: '65%',
+    paddingTop: 10,
   },
   commentsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   commentsTitle: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  closeButton: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
+    color: '#000000',
+    fontSize: 14,
+    fontWeight: '700',
   },
   commentsBody: {
     flex: 1,
+    paddingHorizontal: 15,
+    paddingTop: 15,
   },
-  dummyComment: {
-    color: 'white',
-    marginBottom: 15,
-    fontSize: 14,
+  commentItem: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  commentAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 10,
+  },
+  commentContent: {
+    flex: 1,
   },
   commentUser: {
-    fontWeight: 'bold',
-    marginRight: 8,
+    fontWeight: '700',
+    fontSize: 13,
+    color: '#000000',
+    marginBottom: 2,
   },
-  commentInputContainer: {
-    paddingVertical: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#333',
+  commentTime: {
+    fontWeight: '400',
+    color: '#999999',
+    fontSize: 13,
   },
-  realInput: {
-    backgroundColor: '#333',
-    borderRadius: 20,
+  commentText: {
+    color: '#000000',
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  commentActions: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  commentActionText: {
+    color: '#999999',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  commentLikeContainer: {
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  commentLikeCount: {
+    color: '#999999',
+    fontSize: 11,
+    marginTop: 4,
+  },
+  repliesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  repliesLine: {
+    width: 20,
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginRight: 10,
+  },
+  repliesText: {
+    color: '#999999',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  quickEmojisRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingHorizontal: 15,
     paddingVertical: 12,
-    color: 'white',
-    fontSize: 14,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
   },
-  commentInputPlaceholder: {
-    color: '#999',
+  quickEmoji: {
+    fontSize: 24,
+  },
+  commentInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    backgroundColor: '#FFFFFF',
+  },
+  inputAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  inputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 20,
+    paddingHorizontal: 15,
+  },
+  realInput: {
+    flex: 1,
+    paddingVertical: 10,
+    color: '#000000',
     fontSize: 14,
   },
   pauseIconContainer: {
@@ -386,6 +546,31 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.75)',
     textShadowOffset: { width: -1, height: 1 },
     textShadowRadius: 10,
+  },
+  quickCommentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  quickCommentAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)',
+  },
+  quickCommentInput: {
+    flex: 1,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    paddingHorizontal: 15,
+  },
+  quickCommentPlaceholder: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 13,
   },
   musicRow: {
     flexDirection: 'row',

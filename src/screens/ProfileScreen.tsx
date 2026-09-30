@@ -125,11 +125,15 @@ const ProfileScreen = () => {
               <Text style={styles.statLabel}>Posts</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{((creator.id % 500) + 100)}</Text>
+              <Text style={styles.statValue}>
+                {creator.id === 1 ? profileData.following : socialProfile.followingCount}
+              </Text>
               <Text style={styles.statLabel}>Following</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>{((creator.id % 50000) + 1000)}</Text>
+              <Text style={styles.statValue}>
+                {creator.id === 1 ? profileData.followers : socialProfile.followersCount}
+              </Text>
               <Text style={styles.statLabel}>Followers</Text>
             </View>
           </View>
@@ -167,33 +171,64 @@ const ProfileScreen = () => {
 
         {/* Tabs Row */}
         <View style={styles.tabsRow}>
-          <View style={styles.tabActive}>
-            <Grid3 size={28} color="#000" variant="Bold" />
-          </View>
-          <View style={styles.tabInactive}>
-            <VideoPlay size={28} color="#888" variant="Outline" />
-          </View>
-          <View style={styles.tabInactive}>
-            <Profile2User size={28} color="#888" variant="Outline" />
-          </View>
+          <TouchableOpacity 
+            style={activeTab === 'Photos' ? styles.tabActive : styles.tabInactive}
+            onPress={() => setActiveTab('Photos')}
+          >
+            <Grid3 size={28} color={activeTab === 'Photos' ? "#000" : "#888"} variant={activeTab === 'Photos' ? "Bold" : "Outline"} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={activeTab === 'Videos' ? styles.tabActive : styles.tabInactive}
+            onPress={() => setActiveTab('Videos')}
+          >
+            <VideoPlay size={28} color={activeTab === 'Videos' ? "#000" : "#888"} variant={activeTab === 'Videos' ? "Bold" : "Outline"} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={activeTab === 'Tagged' ? styles.tabActive : styles.tabInactive}
+            onPress={() => setActiveTab('Tagged')}
+          >
+            <Profile2User size={28} color={activeTab === 'Tagged' ? "#000" : "#888"} variant={activeTab === 'Tagged' ? "Bold" : "Outline"} />
+          </TouchableOpacity>
         </View>
 
         {/* Standard 3-Column Grid */}
         <View style={styles.gridWrapper}>
-          {photos.map((item, index) => (
+          {activeTab === 'Photos' && photos.map((item, index) => (
             <TouchableOpacity 
               key={index} 
               style={[
                 styles.gridItem, 
                 { width: (width - 2) / 3, height: (width - 2) / 3 },
-                index % 3 !== 2 && { marginRight: 1 }, // Add small gap between columns
-                index >= 3 && { marginTop: 1 } // Add small gap between rows
+                index % 3 !== 2 && { marginRight: 1 },
+                index >= 3 && { marginTop: 1 }
               ]}
               onPress={() => handleMediaPress(item)}
             >
               <Image source={{ uri: item.thumbnail }} style={styles.gridImage} />
             </TouchableOpacity>
           ))}
+          {activeTab === 'Videos' && videos.map((item, index) => (
+            <TouchableOpacity 
+              key={index} 
+              style={[
+                styles.gridItem, 
+                { width: (width - 2) / 3, height: ((width - 2) / 3) * 1.5 }, // Reels are usually taller
+                index % 3 !== 2 && { marginRight: 1 },
+                index >= 3 && { marginTop: 1 }
+              ]}
+              onPress={() => handleMediaPress(item)}
+            >
+              <Image source={{ uri: item.thumbnail }} style={styles.gridImage} />
+              <View style={styles.videoIconOverlay}>
+                <VideoPlay size={20} color="#FFF" variant="Bold" />
+              </View>
+            </TouchableOpacity>
+          ))}
+          {activeTab === 'Tagged' && (
+            <View style={{ flex: 1, alignItems: 'center', paddingTop: 50, paddingBottom: 100 }}>
+              <Text style={{ color: '#888', fontSize: 16 }}>No tagged photos</Text>
+            </View>
+          )}
         </View>
         
         {loading && <ActivityIndicator style={{ margin: 20 }} color="#000" />}
@@ -494,6 +529,16 @@ const styles = StyleSheet.create({
   gridImage: {
     width: '100%',
     height: '100%',
+  },
+  videoIconOverlay: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.5,
+    shadowRadius: 2,
+    elevation: 3,
   },
 });
 

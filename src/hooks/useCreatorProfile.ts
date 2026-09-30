@@ -116,7 +116,7 @@ export const useCreatorProfile = (creator: Creator) => {
 
   useEffect(() => {
     refresh();
-  }, [refresh]);
+  }, [creator.id]);
 
   return {
     creator,
