@@ -3,7 +3,7 @@ import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, SearchNormal1, VideoPlay, Send2, ProfileCircle } from 'iconsax-react-native';
+import { Home, SearchNormal1, VideoPlay, Send2, ProfileCircle, AddSquare } from 'iconsax-react-native';
 
 import ReelsScreen from '../screens/ReelsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
@@ -12,6 +12,7 @@ import MessagesListScreen from '../screens/MessagesListScreen';
 import MessageRequestsScreen from '../screens/MessageRequestsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import CreateScreen from '../screens/CreateScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -27,7 +28,13 @@ const MainTabs = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarStyle: { backgroundColor: '#FFF', borderTopColor: '#EEE', elevation: 0, shadowOpacity: 0 },
+        tabBarStyle: { 
+          backgroundColor: '#FFF', 
+          borderTopColor: '#EEE', 
+          elevation: 0, 
+          shadowOpacity: 0,
+          display: route.name === 'Create' ? 'none' : 'flex'
+        },
         tabBarActiveTintColor: '#000',
         tabBarInactiveTintColor: '#000',
         tabBarShowLabel: false,
@@ -35,9 +42,9 @@ const MainTabs = () => {
           const variant = focused ? 'Bold' : 'Linear';
           switch (route.name) {
             case 'Home': return <Home size={26} color={color} variant={variant} />;
-            case 'Video': return <VideoPlay size={26} color={color} variant={variant} />;
-            case 'Send': return <Send2 size={26} color={color} variant={variant} />;
             case 'Search': return <SearchNormal1 size={26} color={color} variant={variant} />;
+            case 'Create': return <AddSquare size={26} color={color} variant={variant} />;
+            case 'Video': return <VideoPlay size={26} color={color} variant={variant} />;
             case 'ProfileTab': return <ProfileCircle size={26} color={color} variant={variant} />;
             default: return null;
           }
@@ -45,9 +52,9 @@ const MainTabs = () => {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Video" component={ReelsScreen} />
-      <Tab.Screen name="Send" component={MessagesListScreen} />
       <Tab.Screen name="Search" children={() => <DummyScreen name="Search" />} />
+      <Tab.Screen name="Create" component={CreateScreen} />
+      <Tab.Screen name="Video" component={ReelsScreen} />
       <Tab.Screen name="ProfileTab" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -62,6 +69,7 @@ const AppNavigator = () => {
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="Message" component={MessageScreen} />
         <Stack.Screen name="MessageRequests" component={MessageRequestsScreen} />
+        {/* We can keep a stack version of Create if needed elsewhere, but it's now in tabs */}
       </Stack.Navigator>
     </NavigationContainer>
   );

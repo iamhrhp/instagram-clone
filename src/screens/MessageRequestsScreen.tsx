@@ -1,16 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList, Image } from 'react-native';
 import { ArrowLeft, Setting4, Verify } from 'iconsax-react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const MessageRequestsScreen = () => {
   const navigation = useNavigation<any>();
+  const [activeTab, setActiveTab] = useState('All');
 
-  const MOCK_REQUESTS = [
-    { id: '1', name: 'Georgi Ganatra', message: 'come to my birthday party', time: '16m', verified: true, unread: true },
-    { id: '2', name: 'Maria Torres', message: 'Replied to your story: 🔥', time: '21m', verified: true, unread: true },
-    { id: '3', name: 'Sobhan Rahimi', message: 'Sent a photo', time: '22m', verified: true, unread: true },
-  ];
+  const MOCK_REQUESTS = {
+    'All': [
+      { id: '1', name: 'Georgi Ganatra', message: 'come to my birthday party', time: '16m', verified: true, unread: true },
+      { id: '2', name: 'Maria Torres', message: 'Replied to your story: 🔥', time: '21m', verified: true, unread: true },
+      { id: '3', name: 'Sobhan Rahimi', message: 'Sent a photo', time: '22m', verified: true, unread: true },
+    ],
+    'Story replies': [
+      { id: '2', name: 'Maria Torres', message: 'Replied to your story: 🔥', time: '21m', verified: true, unread: true },
+      { id: '4', name: 'Alex Johnson', message: 'Replied to your story: 😍', time: '1h', verified: false, unread: false },
+    ],
+    'Hidden': [
+      { id: '5', name: 'Spam Bot', message: 'Click this link to win iPhone!', time: '2h', verified: false, unread: true },
+      { id: '6', name: 'Unknown User', message: 'Hello dear', time: '5h', verified: false, unread: false },
+    ]
+  };
+
+  const currentData = MOCK_REQUESTS[activeTab as keyof typeof MOCK_REQUESTS];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -38,23 +51,32 @@ const MessageRequestsScreen = () => {
 
       {/* Filter Chips */}
       <View style={styles.chipsRow}>
-        <TouchableOpacity style={[styles.chip, styles.chipActive]}>
+        <TouchableOpacity 
+          style={[styles.chip, activeTab === 'All' && styles.chipActive]}
+          onPress={() => setActiveTab('All')}
+        >
           <View style={[styles.chipDot, { backgroundColor: '#3797F0' }]} />
-          <Text style={[styles.chipText, styles.chipTextActive]}>All <Text style={{fontWeight: 'normal'}}>20+</Text></Text>
+          <Text style={[styles.chipText, activeTab === 'All' && styles.chipTextActive]}>All <Text style={{fontWeight: 'normal', color: activeTab === 'All' ? '#3797F0' : '#888'}}>20+</Text></Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.chip}>
+        <TouchableOpacity 
+          style={[styles.chip, activeTab === 'Story replies' && styles.chipActive]}
+          onPress={() => setActiveTab('Story replies')}
+        >
           <View style={[styles.chipDot, { backgroundColor: '#3797F0' }]} />
-          <Text style={styles.chipText}>Story replies <Text style={{fontWeight: 'normal', color: '#888'}}>20+</Text></Text>
+          <Text style={[styles.chipText, activeTab === 'Story replies' && styles.chipTextActive]}>Story replies <Text style={{fontWeight: 'normal', color: activeTab === 'Story replies' ? '#3797F0' : '#888'}}>20+</Text></Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.chip}>
+        <TouchableOpacity 
+          style={[styles.chip, activeTab === 'Hidden' && styles.chipActive]}
+          onPress={() => setActiveTab('Hidden')}
+        >
           <View style={[styles.chipDot, { backgroundColor: '#3797F0' }]} />
-          <Text style={styles.chipText}>Hidden <Text style={{fontWeight: 'normal', color: '#888'}}>16</Text></Text>
+          <Text style={[styles.chipText, activeTab === 'Hidden' && styles.chipTextActive]}>Hidden <Text style={{fontWeight: 'normal', color: activeTab === 'Hidden' ? '#3797F0' : '#888'}}>16</Text></Text>
         </TouchableOpacity>
       </View>
 
       {/* Requests List */}
       <FlatList
-        data={MOCK_REQUESTS}
+        data={currentData}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ flexGrow: 1 }}
         renderItem={({ item }) => (

@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Dimensions, ActivityIndicator, Platform } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Dimensions, ActivityIndicator, Platform, PanResponder } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Add, Heart, MessageText, Send2, More, Bookmark, Verify, Refresh2 } from 'iconsax-react-native';
 import { pexelsApi } from '../api/pexels';
 import { NormalizedPhoto } from '../types';
+import CommentsModal from '../components/CommentsModal'; // We'll assume we can reuse or just implement a simple one, wait, no let's just use state for now
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -19,8 +21,24 @@ const dummyStories = [
 
 const HomeScreen = () => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<any>();
   const [feed, setFeed] = useState<NormalizedPhoto[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
+        // Intercept horizontal swipe before FlatList claims the touch
+        return Math.abs(gestureState.dx) > 20 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (gestureState.dx < -50 || gestureState.dx > 50) {
+          // Navigating to Create Screen on swipe
+          navigation.navigate('Create');
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     const fetchFeed = async () => {
@@ -64,7 +82,35 @@ const HomeScreen = () => {
     </View>
   );
 
-  const renderPost = ({ item }: { item: NormalizedPhoto }) => (
+const FeedPostItem = ({ item }: { item: NormalizedPhoto }) => {
+  const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isReposted, setIsReposted] = useState(false);
+  
+  const [likes, setLikes] = useState(Math.floor(Math.random() * 1000) + 100);
+  const [comments, setComments] = useState(Math.floor(Math.random() * 300) + 10);
+  const [reposts, setReposts] = useState(Math.floor(Math.random() * 200) + 5);
+  const [shares, setShares] = useState(Math.floor(Math.random() * 500) + 50);
+
+  const handleLike = () => {
+    setIsLiked(!isLiked);
+    setLikes(prev => isLiked ? prev - 1 : prev + 1);
+  };
+
+  const handleSave = () => {
+    setIsSaved(!isSaved);
+  };
+
+  const handleRepost = () => {
+    setIsReposted(!isReposted);
+    setReposts(prev => isReposted ? prev - 1 : prev + 1);
+  };
+
+  const handleShare = () => {
+    setShares(prev => prev + 1);
+  };
+
+  return (
     <View style={styles.postContainer}>
       {/* Post Header */}
       <View style={styles.postHeader}>
@@ -75,7 +121,9 @@ const HomeScreen = () => {
           <Text style={styles.postUsername}>{(item.photographerName || 'User').toLowerCase().replace(' ', '_')}</Text>
           <Verify size={16} color="#3498db" variant="Bold" style={{ marginLeft: 4 }} />
         </View>
-        <More size={24} color="#000" style={{ transform: [{ rotate: '90deg' }] }} />
+        <TouchableOpacity>
+          <More size={24} color="#000" style={{ transform: [{ rotate: '90deg' }] }} />
+        </TouchableOpacity>
       </View>
 
       {/* Post Image */}
@@ -84,44 +132,47 @@ const HomeScreen = () => {
       {/* Post Actions */}
       <View style={styles.postActions}>
         <View style={styles.postActionsLeft}>
-          <TouchableOpacity style={styles.actionBtn}>
-            <Heart size={26} color="#000" />
-            <Text style={styles.actionMetric}>789</Text>
+          <TouchableOpacity style={styles.actionBtn} onPress={handleLike}>
+            <Heart size={26} color={isLiked ? "#FF3B30" : "#000"} variant={isLiked ? "Bold" : "Linear"} />
+            <Text style={[styles.actionMetric, isLiked && { color: '#FF3B30' }]}>{likes}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn}>
             <MessageText size={26} color="#000" />
-            <Text style={styles.actionMetric}>152</Text>
+            <Text style={styles.actionMetric}>{comments}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
-            <Refresh2 size={26} color="#000" />
-            <Text style={styles.actionMetric}>85</Text>
+          <TouchableOpacity style={styles.actionBtn} onPress={handleRepost}>
+            <Refresh2 size={26} color={isReposted ? "#34C759" : "#000"} />
+            <Text style={[styles.actionMetric, isReposted && { color: '#34C759' }]}>{reposts}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
+          <TouchableOpacity style={styles.actionBtn} onPress={handleShare}>
             <Send2 size={26} color="#000" />
-            <Text style={styles.actionMetric}>341</Text>
+            <Text style={styles.actionMetric}>{shares}</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity><Bookmark size={26} color="#000" /></TouchableOpacity>
+        <TouchableOpacity onPress={handleSave}>
+          <Bookmark size={26} color={isSaved ? "#000" : "#000"} variant={isSaved ? "Bold" : "Linear"} />
+        </TouchableOpacity>
       </View>
 
       {/* Post Likes & Caption */}
       <View style={styles.postFooter}>
         <Text style={styles.captionText}>
           <Text style={styles.captionUsername}>{(item.photographerName || 'User').toLowerCase().replace(' ', '_')} </Text>
-          Lorem ipsum dolor sit amet
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Beautiful capture!
         </Text>
         <Text style={styles.timeText}>5 days ago</Text>
       </View>
     </View>
   );
+};
 
   return (
-    <View style={[styles.container, { paddingTop: Math.max(insets.top, 10) }]}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, 10) }]} {...panResponder.panHandlers}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.logoText}>ReelsTalk</Text>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerIconBtn}>
+          <TouchableOpacity style={styles.headerIconBtn} onPress={() => navigation.navigate('Create')}>
             <Add size={28} color="#000" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerIconBtn}>
@@ -134,7 +185,7 @@ const HomeScreen = () => {
       <FlatList
         data={feed}
         keyExtractor={item => item.id}
-        renderItem={renderPost}
+        renderItem={({ item }) => <FeedPostItem item={item} />}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={(
           <View style={styles.storiesSection}>
