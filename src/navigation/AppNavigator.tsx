@@ -8,6 +8,8 @@ import { Home, SearchNormal1, VideoPlay, Send2, ProfileCircle } from 'iconsax-re
 import ReelsScreen from '../screens/ReelsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import MessageScreen from '../screens/MessageScreen';
+import MessagesListScreen from '../screens/MessagesListScreen';
+import MessageRequestsScreen from '../screens/MessageRequestsScreen';
 import HomeScreen from '../screens/HomeScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 
@@ -44,7 +46,7 @@ const MainTabs = () => {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Video" component={ReelsScreen} />
-      <Tab.Screen name="Send" children={() => <DummyScreen name="Send" />} />
+      <Tab.Screen name="Send" component={MessagesListScreen} />
       <Tab.Screen name="Search" children={() => <DummyScreen name="Search" />} />
       <Tab.Screen name="ProfileTab" component={ProfileScreen} />
     </Tab.Navigator>
@@ -59,6 +61,7 @@ const AppNavigator = () => {
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="Message" component={MessageScreen} />
+        <Stack.Screen name="MessageRequests" component={MessageRequestsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

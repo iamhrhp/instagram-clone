@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions, Modal, ActivityIndicator, FlatList } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Dimensions, Modal, ActivityIndicator, FlatList, PanResponder } from 'react-native';
 import Video from 'react-native-video';
 import ReelItem from '../components/ReelItem';
 import PhotoItem from '../components/PhotoItem';
@@ -251,8 +251,22 @@ const ProfileScreen = () => {
       </Modal>
 
       {/* Full Screen Video Modal */}
-      <Modal visible={!!playingVideo} transparent={true} animationType="slide">
-        <View style={styles.videoModalContainer}>
+      <Modal visible={!!playingVideo} transparent={true} animationType="slide" onRequestClose={() => setPlayingVideo(null)}>
+        <View 
+          style={styles.videoModalContainer}
+          {...PanResponder.create({
+            onMoveShouldSetPanResponder: (_, gestureState) => {
+              // Only trigger if sliding right significantly and more horizontally than vertically
+              return gestureState.dx > 20 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 2;
+            },
+            onPanResponderRelease: (_, gestureState) => {
+              if (gestureState.dx > 50) {
+                setPlayingVideo(null);
+                setPlayingPhoto(null);
+              }
+            }
+          }).panHandlers}
+        >
           <FlatList
             data={videos}
             initialScrollIndex={activeVideoIndex}
